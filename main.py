@@ -10,11 +10,11 @@ from uvicorn import run
 dotenv_path = path.join(path.dirname(__file__), '.env')
 if path.exists(dotenv_path):
     load_dotenv(dotenv_path)
-db_type = environ.get('DB_TYPE')
-db_ip = environ.get('DB_HOST')
-db_port = int(environ.get('DB_PORT'))
-db_user = environ.get('DB_USER')
-db_pass = environ.get('DB_PASSWORD')
+db_type = environ.get('POSTGRES_TYPE')
+db_ip = environ.get('POSTGRES_HOST')
+db_port = int(environ.get('POSTGRES_PORT'))
+db_user = environ.get('POSTGRES_USER')
+db_pass = environ.get('POSTGRES_PASSWORD')
 app_ip = environ.get('WSGI_HOST')
 app_port = int(environ.get('WSGI_PORT'))
 
@@ -51,7 +51,6 @@ CREATE TABLE dishes (
     price VARCHAR(150))
 """)
 connection.commit()
-
 
 # Menus
 @app.get("/api/v1/menus")
