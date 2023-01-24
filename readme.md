@@ -48,3 +48,11 @@ Update a dish
 
 DELETE /api/v1/menus/{target_menu_id}/submenus/{target_submenu_id}/dishes/{target_dish_id}
 Delete a dish
+
+Run application and tests:
+1) docker-compose build
+2) docker-compose up
+3) Windows: docker-compose logs | select-string ylab_test
+   Linux:   docker-compose logs | grep ylab_test
+
+API Port 8000
