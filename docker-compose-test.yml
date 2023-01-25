@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+
+  test_db:
+    env_file: .env
+    container_name: ${APP_NAME_TEST}_test_db
+    image: postgres:${POSTGRES_VERSION}
+    networks:
+      test:
+        ipv4_address: 172.16.2.2
+    ports:
+      - 5433:5432
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: on-failure
+
+  test_asgi:
+    env_file: .env
+    container_name: ${APP_NAME_TEST}_test
+    image: python:${PYTHON_VERSION}
+    command: pytest -rAv tests/test_api.py
+    build:
+      context: .
+      dockerfile: ./tests/Dockerfile
+    networks:
+      test:
+        ipv4_address: 172.16.2.3
+    ports:
+      - 8001:8001
+    depends_on:
+      test_db:
+        condition: service_healthy
+
+networks:
+  test:
+    name: ylab_test
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.2.0/24

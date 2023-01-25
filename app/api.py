@@ -3,13 +3,11 @@ import os
 sys.path.append(os.getcwd())
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from os import environ, path
 from pydantic import BaseModel
 from uvicorn import run
-
 from db.dbconnection import cursor
-
 
 class Menu(BaseModel):
     title: str
@@ -17,7 +15,6 @@ class Menu(BaseModel):
 
 class Dish(Menu):
     price: str
-
 
 # FastAPI app and request body
 app = FastAPI()
@@ -73,7 +70,7 @@ def get_menus():
         return values
 
 @app.get("/api/v1/menus/{target_menu_id}", status_code=200)
-def get_menu(target_menu_id: int):
+def get_menu(target_menu_id: int, ):
     cursor.execute(f"""
     SELECT
         m.id::text,
@@ -95,24 +92,24 @@ def get_menu(target_menu_id: int):
         raise HTTPException(status_code=404, detail="menu not found")
 
 @app.post("/api/v1/menus", status_code=201)
-def create_menu(menu: Menu):
+def create_menu(menu: Menu, ):
     cursor.execute(f"INSERT INTO menus (title, description) VALUES ('{menu.title}', '{menu.description}') RETURNING id")
     return {"id": str(cursor.fetchone()[0]), "title": menu.title, "description": menu.description}
 
 @app.patch("/api/v1/menus/{target_menu_id}", status_code=200)
-def update_menu(target_menu_id: int, menu: Menu):
+def update_menu(target_menu_id: int, menu: Menu, ):
     cursor.execute(f"UPDATE menus SET (title, description) = ('{menu.title}', '{menu.description}') "
                    f"WHERE id = {target_menu_id}")
     cursor.connection.commit()
     return {"id": str(target_menu_id), "title": menu.title, "description": menu.description}
 
 @app.delete("/api/v1/menus/{target_menu_id}", status_code=200)
-def delete_menu(target_menu_id: int):
+def delete_menu(target_menu_id: int, ):
     return cursor.execute(f"DELETE FROM menus WHERE id={target_menu_id}")
 
 # Submenus
 @app.get("/api/v1/menus/{target_menu_id}/submenus", status_code=200)
-def get_submenus(target_menu_id: int):
+def get_submenus(target_menu_id: int, ):
     cursor.execute(f"""
     SELECT
         s.id::text,
@@ -133,7 +130,7 @@ def get_submenus(target_menu_id: int):
         return values
 
 @app.get("/api/v1/menus/{target_menu_id}/submenus/{target_submenu_id}", status_code=200)
-def get_submenu(target_menu_id: int, target_submenu_id: int):
+def get_submenu(target_menu_id: int, target_submenu_id: int, ):
     cursor.execute(f"""
     SELECT
         s.id::text,
@@ -154,25 +151,25 @@ def get_submenu(target_menu_id: int, target_submenu_id: int):
         raise HTTPException(status_code=404, detail="submenu not found")
 
 @app.post("/api/v1/menus/{target_menu_id}/submenus", status_code=201)
-def create_submenu(target_menu_id: int, menu: Menu):
+def create_submenu(target_menu_id: int, menu: Menu, ):
     cursor.execute(f"INSERT INTO submenus (menu, title, description)"
                    f"VALUES ({target_menu_id}, '{menu.title}', '{menu.description}')"
                    f"RETURNING id")
     return {"id": str(cursor.fetchone()[0]), "title": menu.title, "description": menu.description}
 
 @app.patch("/api/v1/menus/{target_menu_id}/submenus/{target_submenu_id}", status_code=200)
-def update_submenu(target_menu_id: int, target_submenu_id: int, menu: Menu):
+def update_submenu(target_menu_id: int, target_submenu_id: int, menu: Menu, ):
     cursor.execute(f"UPDATE submenus SET (title, description) = ('{menu.title}', '{menu.description}') "
                    f"WHERE menu={target_menu_id} AND id={target_submenu_id}")
     return {"id": str(target_submenu_id), "title": menu.title, "description": menu.description}
 
 @app.delete("/api/v1/menus/{target_menu_id}/submenus/{target_submenu_id}", status_code=200)
-def delete_submenu(target_menu_id: int, target_submenu_id: int):
+def delete_submenu(target_menu_id: int, target_submenu_id: int, ):
     return cursor.execute(f"DELETE FROM submenus WHERE menu={target_menu_id} AND id={target_submenu_id}")
 
 # Dishes
 @app.get("/api/v1/menus/{target_menu_id}/submenus/{target_submenu_id}/dishes", status_code=200)
-def get_dishes(target_menu_id: int, target_submenu_id: int):
+def get_dishes(target_menu_id: int, target_submenu_id: int, ):
     cursor.execute(f"""
     SELECT
         d.id::text,
@@ -193,7 +190,7 @@ def get_dishes(target_menu_id: int, target_submenu_id: int):
         return values
 
 @app.get("/api/v1/menus/{target_menu_id}/submenus/{target_submenu_id}/dishes/{target_dish_id}", status_code=200)
-def get_dish(target_menu_id: int, target_submenu_id: int, target_dish_id: int):
+def get_dish(target_menu_id: int, target_submenu_id: int, target_dish_id: int, ):
     cursor.execute(f"""
     SELECT
         d.id::text,
@@ -214,20 +211,20 @@ def get_dish(target_menu_id: int, target_submenu_id: int, target_dish_id: int):
         raise HTTPException(status_code=404, detail="dish not found")
 
 @app.post("/api/v1/menus/{target_menu_id}/submenus/{target_submenu_id}/dishes", status_code=201)
-def create_submenu(target_submenu_id: int, dish: Dish):
+def create_submenu(target_submenu_id: int, dish: Dish, ):
     cursor.execute(f"INSERT INTO dishes (submenu, title, description, price) "
                    f"VALUES ('{target_submenu_id}', '{dish.title}', '{dish.description}', '{dish.price}') "
                    f"RETURNING id")
     return {"id": str(cursor.fetchone()[0]), "title": dish.title, "description": dish.description, "price": dish.price}
 
 @app.patch("/api/v1/menus/{target_menu_id}/submenus/{target_submenu_id}/dishes/{target_dish_id}", status_code=200)
-def update_submenu(target_dish_id: int, dish: Dish):
+def update_submenu(target_dish_id: int, dish: Dish, ):
     cursor.execute(f"UPDATE dishes SET (title, description, price) = ('{dish.title}', '{dish.description}', '{dish.price}') "
                    f"WHERE id={target_dish_id}")
     return {"id": str(target_dish_id), "title": dish.title, "description": dish.description, "price": dish.price}
 
 @app.delete("/api/v1/menus/{target_menu_id}/submenus/{target_submenu_id}/dishes/{target_dish_id}", status_code=200)
-def delete_submenu(target_dish_id: int):
+def delete_submenu(target_dish_id: int, ):
     return cursor.execute(f"DELETE FROM dishes WHERE id={target_dish_id}")
 
 

@@ -7,6 +7,7 @@ from os import environ, path, getcwd
 from psycopg2 import connect
 
 sys.path.append(getcwd())
+environ["TEST"] = "True"
 import app.api
 
 
@@ -27,6 +28,7 @@ def session():
     app.api.cursor = cursor
     yield cursor
     connection.close()
+
 
 @pytest.fixture
 def setup_db(session):
